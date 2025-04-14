@@ -13,63 +13,25 @@ jobs:
       # Checkout code
       - uses: actions/checkout@v3
 
-      # Static Code Scan (SonarCloud) - Disabled for now
-      # - name: SonarCloud Scan
-      #   uses: sonarsource/sonarcloud-github-action@master
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
       # Build Docker Image
       - name: Build Docker Image
         run: |
           docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }} .
 
-      # Login to AWS ECR
+      # Log in to AWS ECR
       - name: Log in to AWS ECR
         run: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
 
       # List Docker Images
       - name: List Docker Images
         run: docker images
 
-      # Image Scan with Trivy - Disabled for now
-      # - name: Run Trivy Vulnerability Scanner
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }}
-      #     format: 'table'
-      #     exit-code: '0'
-      #     ignore-unfixed: true
-      #     vuln-type: 'os,library'
-      #     severity: 'CRITICAL,HIGH'
-
       # Push Image to AWS ECR
       - name: Push Image to AWS ECR
         run: |
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }}
-
-  # Kubernetes Deployment - Disabled for now
-  # deploy:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  # 
-  #   steps:
-  #     # Clone your Kubernetes chart repository (for future deployment)
-  #     - name: Clone Chart Repo
-  #       run: git clone https://github.com/ikambarov/flaskex-chart.git
-  # 
-  #     # Setup KubeConfig (this is optional now since you're not deploying to K8s yet)
-  #     - name: Setup KUBECONFIG
-  #       uses: vbem/kubeconfig4sa@v1
-  #       with:
-  #         server: ${{ secrets.KUBEAPI_SERVER }}
-  #         ca-base64: ${{ secrets.K8S_CA_BASE64 }}
-  #         token: ${{ secrets.K8S_SA_TOKEN }}
-  #         namespace: default
-  # 
-  #     # Helm Deployment (you can skip this step for now)
-  #     - name: Deploy to Kubernetes (Optional)
-  #       run: |
-  #         helm upgrade --install myapp --set image=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me --set tag=${{ github.sha }} flaskex-chart/
