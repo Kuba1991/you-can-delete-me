@@ -1,4 +1,4 @@
-name: workflow1
+name: Build and Push to AWS ECR
 
 on:
   push:
@@ -8,56 +8,67 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
+      # Checkout code
       - uses: actions/checkout@v3
 
-      # Static Code Scan 
+      # Static Code Scan (SonarCloud)
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.HUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Build Image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/flaskex:${{ github.sha }} .
+      # Build Docker Image
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }} .
 
-      - name: List Images
+      # Login to AWS ECR
+      - name: Log in to AWS ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+      # List Docker Images
+      - name: List Docker Images
         run: docker images
 
-      # Image Scan
-      - name: Run Trivy vulnerability scanner
+      # Image Scan with Trivy
+      - name: Run Trivy Vulnerability Scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/flaskex:${{ github.sha }}'
+          image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }}
           format: 'table'
           exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-      - name: Push Image to Registry
+      # Push Image to AWS ECR
+      - name: Push Image to AWS ECR
         run: |
-          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/flaskex:${{ github.sha }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }}
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    
+
     steps:
+      # Clone your Kubernetes chart repository (for future deployment)
       - name: Clone Chart Repo
         run: git clone https://github.com/ikambarov/flaskex-chart.git
 
+      # Setup KubeConfig (this is optional now since you're not deploying to K8s yet)
       - name: Setup KUBECONFIG
         uses: vbem/kubeconfig4sa@v1
         with:
-          server:     ${{ secrets.KUBEAPI_SERVER }}
-          ca-base64:  ${{ secrets.K8S_CA_BASE64 }}
-          token:      ${{ secrets.K8S_SA_TOKEN }}
-          namespace:  default
+          server: ${{ secrets.KUBEAPI_SERVER }}
+          ca-base64: ${{ secrets.K8S_CA_BASE64 }}
+          token: ${{ secrets.K8S_SA_TOKEN }}
+          namespace: default
 
-      - name:
-        run: helm upgrade --install myapp --set image=${{ secrets.DOCKERHUB_USERNAME }}/flaskex  --set tag=${{ github.sha }} flaskex-chart/
-
-      
+      # Helm Deployment (you can skip this step for now)
+      - name: Deploy to Kubernetes (Optional)
+        run: |
+          helm upgrade --install myapp --set image=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me --set tag=${{ github.sha }} flaskex-chart/
