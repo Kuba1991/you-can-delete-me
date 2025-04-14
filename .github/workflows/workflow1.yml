@@ -1,47 +1,36 @@
-name: Build and Push to AWS ECR
-
+name: Build and Push to ECR
 
 on:
- push:
-   branches:
-     - 'master'
-
+  push:
+    branches:
+      - 'master'  # or 'master' depending on your branch name
 
 jobs:
- build:
-   runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-   steps:
-     # Checkout code
-     - uses: actions/checkout@v3
+      # Create a dynamic version tag based on the base version and commit SHA
+      - name: Set Version Tag
+        id: vars
+        run: echo "VERSION_TAG=v1.0-${GITHUB_SHA::7}" >> $GITHUB_ENV
 
+      # Build Docker Image
+      - name: Build Docker Image
+        run: |
+          echo "Building Docker image with tag ${{ env.VERSION_TAG }}"
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ env.VERSION_TAG }} .
 
-     # Build Docker Image
-     - name: Build Docker Image
-       run: |
-         docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }} .
+      # Authenticate with AWS ECR
+      - name: Authenticate with AWS ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-
-     # Log in to AWS ECR
-     - name: Log in to AWS ECR
-       run: |
-         aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-       env:
-         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         AWS_REGION: ${{ secrets.AWS_REGION }}
-
-
-     # List Docker Images
-     - name: List Docker Images
-       run: docker images
-
-
-     # Push Image to AWS ECR
-     - name: Push Image to AWS ECR
-       run: |
-         docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }}
-
-
-
+      # Push Docker Image to ECR
+      - name: Push Docker Image to ECR
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ env.VERSION_TAG }}
