@@ -21,7 +21,7 @@ jobs:
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
 
       # Set up Terraform
