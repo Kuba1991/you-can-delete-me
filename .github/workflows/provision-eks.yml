@@ -39,4 +39,5 @@ jobs:
 
       # Output the EKS cluster name (optional)
       - name: Output EKS Cluster Name
-        run: echo "EKS Cluster Name: my-cluster"
+        run: |
+          echo "EKS Cluster Name: my-cluster"
