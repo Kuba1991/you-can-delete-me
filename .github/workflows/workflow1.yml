@@ -1,37 +1,26 @@
-name: Build and Push to AWS ECR
-
-on:
-  push:
-    branches:
-      - 'master'
+env:
+  BASE_VERSION: v1.1  # You manually increment this for each version
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      # Checkout code
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      # Build Docker Image
+      - name: Set Version Tag
+        id: vars
+        run: echo "VERSION_TAG=${BASE_VERSION}-$(echo ${GITHUB_SHA::7})" >> $GITHUB_ENV
+
       - name: Build Docker Image
         run: |
-          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }} .
+          docker build -t ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ env.VERSION_TAG }} .
 
-      # Log in to AWS ECR
-      - name: Log in to AWS ECR
+      - name: Authenticate with ECR
         run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-      # List Docker Images
-      - name: List Docker Images
-        run: docker images
-
-      # Push Image to AWS ECR
-      - name: Push Image to AWS ECR
+      - name: Push Docker Image
         run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ github.sha }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/you-can-delete-me:${{ env.VERSION_TAG }}
