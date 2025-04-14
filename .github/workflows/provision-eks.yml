@@ -9,7 +9,7 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    
+
     steps:
       # Checkout the code
       - name: Checkout Code
