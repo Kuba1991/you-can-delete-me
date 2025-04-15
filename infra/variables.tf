@@ -31,3 +31,4 @@ variable "cluster_name" {
 variable "worker_instance_type" {
   description = "EC2 instance type for worker nodes"
   default     = "
+}
