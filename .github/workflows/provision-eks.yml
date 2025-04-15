@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
       - name: Checkout Code
         uses: actions/checkout@v3
 
@@ -22,12 +21,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: 1.1.9
+          terraform_version: "1.1.9"
 
       - name: Terraform Init
         run: terraform init
