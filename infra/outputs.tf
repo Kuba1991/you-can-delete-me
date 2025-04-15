@@ -40,8 +40,4 @@ output "worker_instance_profile_arn" {
   value       = aws_iam_role.eks_worker_role.arn
 }
 
-# ECR Repository URI
-output "ecr_repo_uri" {
-  description = "URI of the ECR repository"
-  value       = aws_ecr_repository.you_can_delete_me.repository_url
-}
+
