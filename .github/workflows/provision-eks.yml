@@ -24,15 +24,12 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: "1.1.9"
+          terraform_version: 1.1.9
 
       - name: Terraform Init
-        run: terraform init
         working-directory: infra
+        run: terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
         working-directory: infra
-
-      - name: Output EKS Cluster Name
-        run: echo "EKS Cluster Name: my-cluster"
+        run: terraform apply -auto-approve
