@@ -2,8 +2,9 @@ name: Terraform EKS Provisioning
 
 on:
   push:
-    branches:
-      - master
+    paths:
+      - 'infra/**'
+      - '.github/workflows/provision-eks.yml'
   workflow_dispatch:
 
 jobs:
@@ -30,6 +31,6 @@ jobs:
         working-directory: infra
         run: terraform init
 
-      - name: Terraform Apply
+      - name: Terraform Destroy
         working-directory: infra
-        run: terraform apply -auto-approve
+        run: terraform destroy -auto-approve

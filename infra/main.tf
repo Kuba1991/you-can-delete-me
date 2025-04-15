@@ -107,13 +107,13 @@ resource "aws_launch_configuration" "worker_launch_config" {
 }
 
 # Auto Scaling Group for Worker Nodes
-resource "aws_autoscaling_group" "worker_asg" {
-  desired_capacity     = 3
-  max_size             = 3
-  min_size             = 3
-  vpc_zone_identifier  = [aws_subnet.subnet_a.id, aws_subnet.subnet_b.id]
-  launch_configuration = aws_launch_configuration.worker_launch_config.id
-}
+#resource "aws_autoscaling_group" "worker_asg" {
+  #desired_capacity     = 3
+  #max_size             = 3
+  #min_size             = 3
+  #vpc_zone_identifier  = [aws_subnet.subnet_a.id, aws_subnet.subnet_b.id]
+  #launch_configuration = aws_launch_configuration.worker_launch_config.id
+#}
 
 resource "aws_eks_node_group" "my_node_group" {
   cluster_name    = aws_eks_cluster.my_cluster.name
