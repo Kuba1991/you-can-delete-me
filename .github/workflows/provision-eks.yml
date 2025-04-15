@@ -28,11 +28,11 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: infra
+        working-directory: ./infra
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
-        working-directory: infra
+        working-directory: ./infra
 
       - name: Output EKS Cluster Name
         run: echo "EKS Cluster Name: my-cluster"
