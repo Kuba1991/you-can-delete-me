@@ -30,5 +30,5 @@ variable "cluster_name" {
 # Instance type for worker nodes
 variable "worker_instance_type" {
   description = "EC2 instance type for worker nodes"
-  default     = "
+  default     = "t3.medium"  # or any other instance type of your choice
 }
